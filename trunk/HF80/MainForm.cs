@@ -25,40 +25,19 @@ namespace HF80
         //byte[] fault_req = { 0xD0, 0x80 };
 
         #endregion
-        String port_name;
         
+
+        /* Instance variables belonging to MainForm */
+        private Radio radio;
         SerialPort sp;
-        bool is_connected=false;
+        bool isConnected=false;
         float frequency;
         String mode;
         Thread updateThread;
-       
-        Help_Form form2;
       
         public MainForm()
         {
             InitializeComponent();
-        }
-
-        private void b_transmit_Click(object sender, EventArgs e)
-        {
-            
-          // sp.Open();
-            //sp.Write("HELLO");
-          // label1.Text = sp.ReadLine();
-           //sp.Close();
-           /* Thread read_thread = new Thread(new ThreadStart(this.readSerial));
-            if (read_thread.IsAlive)
-            {
-            }
-            else {
-                read_thread.Start();
-            } */
-           
-          
-          
-           
-           
         }
 
         public void closeToolStripMenuItem_Click(object sender, EventArgs e)
@@ -70,50 +49,63 @@ namespace HF80
 
         private void b_connect_Click(object sender, EventArgs e)
         {
-            if (is_connected==false)
+            String port;
+
+            /* We're not connected, attempt to connect */
+            if (!isConnected)
             {
-                if (port_list.SelectedIndex != -1)
+                if (portList.SelectedIndex != -1)
                 {
-                    port_name = port_list.SelectedItem.ToString();
-                    label1.Text = port_name;
-                    sp = new SerialPort(port_name, 9600);
-                    sp.Open();
-                    if (sp.IsOpen)
+                    port = portList.SelectedItem.ToString();
+                    radio = new Radio(port);
+
+                    bool connected = radio.Connect();
+
+                    if (connected)
                     {
-                        conn_ind.BackColor = Color.LimeGreen;
+                        connIndicator.BackColor = Color.LimeGreen;
+                        label1.Text = port;
+                        connectButton.Text = "Disconnect";
+                        isConnected = true;
+                        controlGroup.Enabled = true;
                     }
+
                     else
                     {
-                        conn_ind.BackColor = Color.Red;
+                        MessageBox.Show("Could not connect to " + port + "!", "Serial Port Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
-                    b_connect.Text = "Stop";
-                    is_connected = true;
                 }
             }
             else
             {
-                sp.Close();
-                b_connect.Text = "Connect";
-                conn_ind.BackColor = Color.Red;
-                is_connected = false;
-                
+                radio.Close();
+                connectButton.Text = "Connect";
+                connIndicator.BackColor = Color.Red;
+                isConnected = false;
+                controlGroup.Enabled = false;
+                radio = null;
             }
         }
 
+        /* Called when the form first loads */
         private void Form1_Load(object sender, EventArgs e)
         {
-            conn_ind.BackColor = Color.White;
+            connIndicator.BackColor = Color.White;
             String[] ports = SerialPort.GetPortNames();
-            conn_ind.BackColor = Color.Red;
+            connIndicator.BackColor = Color.Red;
             //  WindowState = System.Windows.Forms.FormWindowState.Maximized;
 
             foreach (string port in ports)
             {
-                port_list.Items.Add(port);
+                portList.Items.Add(port);
                 SerialPort closer = new SerialPort(port);
                 closer.Close();
             }
+
+            controlGroup.Enabled = false;
         }
+
+
         private void readSerial()
         {
             while (true)
@@ -121,21 +113,20 @@ namespace HF80
                this.textBox1.AppendText(sp.ReadLine() + "\n");
             }
         }
-        private void Form1_KeyPress(object sender, KeyPressEventArgs e)
+
+
+        private void toolTip1_Popup(object sender, PopupEventArgs e)
         {
-            if (e.KeyChar == (char)Keys.Space)
-            {
-                this.Close();
-
-              
-            }
-
-            MessageBox.Show(e.KeyChar.ToString(), "Your input");
 
         }
 
+        private void hF80HelpToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new Help_Form().Show();
+        }
 
-        private void rb_am_CheckedChanged(object sender, EventArgs e)
+        #region RadioButton handlers
+        private void amModeButton_CheckedChanged(object sender, EventArgs e)
         {
             mode = "AM";
             label1.Text = mode;
@@ -145,18 +136,7 @@ namespace HF80
             }
         }
 
-        private void toolTip1_Popup(object sender, PopupEventArgs e)
-        {
-
-        }
-
-        private void hF80HelpToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-             form2 = new Help_Form();
-            form2.Show();
-        }
-
-        private void rb_usb_CheckedChanged(object sender, EventArgs e)
+        private void usbModeButton_CheckedChanged(object sender, EventArgs e)
         {
             mode = "USB";
             label1.Text = mode;
@@ -166,7 +146,7 @@ namespace HF80
             }
         }
 
-        private void rb_lsb_CheckedChanged(object sender, EventArgs e)
+        private void lsbModeButton_CheckedChanged(object sender, EventArgs e)
         {
             mode = "LSB";
             label1.Text = mode;
@@ -176,7 +156,7 @@ namespace HF80
             }
         }
 
-        private void rb_cw_CheckedChanged(object sender, EventArgs e)
+        private void isbModeButton_CheckedChanged(object sender, EventArgs e)
         {
             mode = "CW";
             label1.Text = mode;
@@ -185,6 +165,7 @@ namespace HF80
                 sp.Write(set_mode_cw, 0, 5);
             }
         }
+        #endregion
 
         private void button7_Click(object sender, EventArgs e)
         {
@@ -205,10 +186,12 @@ namespace HF80
             }
            
         }
+
         private void button1_Click(object sender, EventArgs e)
         {
             incfreq(c_freq.Text, 0,1);
         }
+
         private void incfreq(String s, int inc, int amt)
         {
             if (inc == 0)
@@ -274,12 +257,12 @@ namespace HF80
         {
             while (1==1)
             {
-                if (is_connected == false)
+                if (isConnected == false)
                 {
 
                     MessageBox.Show("No Serial Port Connected", "Serial Error");
                 }
-                if (is_connected == true)
+                if (isConnected == true)
                 {
                     if (sp.ReadLine() != null)
                     {
@@ -336,12 +319,8 @@ namespace HF80
             }
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        private void groupBox1_Enter(object sender, EventArgs e)
+        /* Transmit! */
+        private void txButton_Click(object sender, EventArgs e)
         {
 
         }

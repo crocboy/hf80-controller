@@ -11,13 +11,14 @@ namespace HF80
     /* Most messages are provided via the "Message" class */
     class Radio
     {
-        /* Configuration settings */
-        public static int HF80_Baud = 9600;
-        public static int HF80_DataBits = 8;
-        public static StopBits HF80_StopBits = StopBits.None;
-        public static Handshake HF80_Handshake = Handshake.None;
+        /* Static constants used for changing various settings */
+        public const int MODE_AM = 0;
+        public const int MODE_LSB = 1;
+        public const int MODE_ISB = 2;
+        public const int MODE_USB = 3;
 
 
+        /* Instance variables */
         private SerialPort port;
         private String PortName;
 
@@ -35,21 +36,69 @@ namespace HF80
             /* Configure SerialPort */
             try
             {
+                /* Set the SerialPort config settings */
                 port = new SerialPort(this.PortName)
                 {
-                    BaudRate = HF80_Baud,
-                    StopBits = HF80_StopBits,
-                    DataBits = HF80_DataBits,
-                    Handshake = HF80_Handshake
+                    BaudRate = 9600,
+                    StopBits = StopBits.One,
+                    DataBits = 8,
+                    Handshake = Handshake.None,
+                    Parity = Parity.None
                 };
+
+                port.DataReceived += OnDataReceived;
 
                 return true;
             }
             catch (Exception e)
             {
                 // Print exception 
+                port = null;
                 return false;
             }
+        }
+
+        /* Change the mode of the radio */
+        public void SetMode(int mode)
+        {
+            /* Find what mode the user wishes to switch to, and send the proper message over the serial port */
+            switch (mode)
+            {
+                case MODE_AM:
+                    Write(Message.SET_MODE_AM);
+                    break;
+                case MODE_LSB:
+                    Write(Message.SET_MODE_LSB);
+                    break;
+                case MODE_ISB:
+                    Write(Message.SET_MODE_ISB);
+                    break;
+                case MODE_USB:
+                    Write(Message.SET_MODE_USB);
+                    break;
+            }
+        }
+
+        /* Close the SerialPort */
+        public void Close()
+        {
+            if (port != null)
+                port.Close();
+        }
+
+        /* Write the byte[] to the port, at an automatic offset of 0.  This is basically a shortcut method */
+        private void Write(byte[] data)
+        {
+            if(port != null)
+            {
+                port.Write(data, 0, data.Length);
+            }
+        }
+
+        /* Called every time new data is received */
+        public void OnDataReceived(object sender, SerialDataReceivedEventArgs e)
+        {
+            Console.WriteLine("");
         }
     }
 }
