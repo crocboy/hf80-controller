@@ -65,6 +65,7 @@
             this.button8 = new System.Windows.Forms.Button();
             this.button9 = new System.Windows.Forms.Button();
             this.controlGroup = new System.Windows.Forms.GroupBox();
+            this.frequencyEdit1 = new SDRSharp.FrequencyEdit.FrequencyEdit();
             this.menuStrip1.SuspendLayout();
             this.connectionGroup.SuspendLayout();
             this.groupBox1.SuspendLayout();
@@ -474,6 +475,7 @@
             // 
             // controlGroup
             // 
+            this.controlGroup.Controls.Add(this.frequencyEdit1);
             this.controlGroup.Controls.Add(this.groupBox1);
             this.controlGroup.Controls.Add(this.button8);
             this.controlGroup.Controls.Add(this.button9);
@@ -491,6 +493,18 @@
             this.controlGroup.TabIndex = 17;
             this.controlGroup.TabStop = false;
             this.controlGroup.Text = "Control";
+            // 
+            // frequencyEdit1
+            // 
+            this.frequencyEdit1.AutoSize = true;
+            this.frequencyEdit1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.frequencyEdit1.BackColor = System.Drawing.Color.Transparent;
+            this.frequencyEdit1.Frequency = ((long)(0));
+            this.frequencyEdit1.Location = new System.Drawing.Point(179, 323);
+            this.frequencyEdit1.Name = "frequencyEdit1";
+            this.frequencyEdit1.Size = new System.Drawing.Size(234, 25);
+            this.frequencyEdit1.StepSize = 0;
+            this.frequencyEdit1.TabIndex = 17;
             // 
             // MainForm
             // 
@@ -561,6 +575,7 @@
         private System.Windows.Forms.Button button8;
         private System.Windows.Forms.Button button9;
         private System.Windows.Forms.GroupBox controlGroup;
+        private SDRSharp.FrequencyEdit.FrequencyEdit frequencyEdit1;
     }
 }
 
