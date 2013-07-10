@@ -32,7 +32,7 @@ namespace HF80
         SerialPort sp;
         bool isConnected=false;
         float frequency;
-        String mode;
+        int currentMode;
         Thread updateThread;
       
         public MainForm()
@@ -66,6 +66,7 @@ namespace HF80
                         connIndicator.BackColor = Color.LimeGreen;
                         label1.Text = port;
                         connectButton.Text = "Disconnect";
+                        radio.onPrint += this.Print;
                         isConnected = true;
                         controlGroup.Enabled = true;
                     }
@@ -76,6 +77,8 @@ namespace HF80
                     }
                 }
             }
+
+            /* We're already connected; so disconnect */
             else
             {
                 radio.Close();
@@ -83,6 +86,7 @@ namespace HF80
                 connIndicator.BackColor = Color.Red;
                 isConnected = false;
                 controlGroup.Enabled = false;
+                printBox.Clear();
                 radio = null;
             }
         }
@@ -105,21 +109,6 @@ namespace HF80
             controlGroup.Enabled = false;
         }
 
-
-        private void readSerial()
-        {
-            while (true)
-            {
-               this.textBox1.AppendText(sp.ReadLine() + "\n");
-            }
-        }
-
-
-        private void toolTip1_Popup(object sender, PopupEventArgs e)
-        {
-
-        }
-
         private void hF80HelpToolStripMenuItem_Click(object sender, EventArgs e)
         {
             new Help_Form().Show();
@@ -128,154 +117,40 @@ namespace HF80
         #region RadioButton handlers
         private void amModeButton_CheckedChanged(object sender, EventArgs e)
         {
-            mode = "AM";
-            label1.Text = mode;
-            if (sp.IsOpen)
+            if (radio != null && amModeButton.Checked)
             {
-                sp.Write(set_mode_am, 0, 5);
+                radio.SetMode(Radio.MODE_AM);
+                currentMode = Radio.MODE_AM;
             }
         }
 
         private void usbModeButton_CheckedChanged(object sender, EventArgs e)
         {
-            mode = "USB";
-            label1.Text = mode;
-            if (sp.IsOpen)
+            if (radio != null && usbModeButton.Checked)
             {
-                sp.Write(set_mode_ssb, 0, 5);
+                radio.SetMode(Radio.MODE_USB);
+                currentMode = Radio.MODE_USB;
             }
         }
 
         private void lsbModeButton_CheckedChanged(object sender, EventArgs e)
         {
-            mode = "LSB";
-            label1.Text = mode;
-            if (sp.IsOpen)
+            if (radio != null && lsbModeButton.Checked)
             {
-                sp.Write(set_mode_ssb, 0, 5);
+                radio.SetMode(Radio.MODE_LSB);
+                currentMode = Radio.MODE_LSB;
             }
         }
 
         private void isbModeButton_CheckedChanged(object sender, EventArgs e)
         {
-            mode = "CW";
-            label1.Text = mode;
-            if (sp.IsOpen)
+            if (radio != null && isbModeButton.Checked)
             {
-                sp.Write(set_mode_cw, 0, 5);
+                radio.SetMode(Radio.MODE_ISB);
+                currentMode = Radio.MODE_ISB;
             }
         }
         #endregion
-
-        private void button7_Click(object sender, EventArgs e)
-        {
-            //sp.Write(textBox2.Text.ToString());
-            String name = button7.Text.ToString();
-            if (name == "Start Debug")
-            {
-                button7.Text = "Stop Debug";
-                Form tf = new MainForm();
-                
-                updateThread = new Thread(new ThreadStart(this.updateDebug));
-                updateThread.Start();
-            }
-            else if (name == "Stop Debug")
-            {
-                button7.Text = "Start Debug";
-                updateThread.Abort();
-            }
-           
-        }
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            incfreq(c_freq.Text, 0,1);
-        }
-
-        private void incfreq(String s, int inc, int amt)
-        {
-            if (inc == 0)
-            {
-                String[] spl = s.Split('.');
-                String sf = spl[0];
-                int f = Convert.ToInt32(sf);
-                f = f + amt;
-                sf = f.ToString() + "." + spl[1] + "." + spl[2];
-                c_freq.Text = sf;
-            }
-            else if (inc == 1)
-            {
-                String[] spl = s.Split('.');
-                String sf = spl[1];
-                int f = Convert.ToInt32(sf);
-                f = f + amt;
-                sf = spl[0] + "." + f.ToString() + "." + spl[2];
-                c_freq.Text = sf;
-            }
-            else if (inc == 2)
-            {
-                String[] spl = s.Split('.');
-                String sf = spl[2];
-                int f = Convert.ToInt32(sf);
-                f = f + amt;
-                sf = spl[0] + "." + spl[1] + "." + f.ToString();
-                c_freq.Text = sf;
-            }
-            
-        }
-
-        private void button4_Click(object sender, EventArgs e)
-        {
-            incfreq(c_freq.Text, 1,100);
-        }
-
-        private void button6_Click(object sender, EventArgs e)
-        {
-            incfreq(c_freq.Text, 2,100);
-        }
-
-        private void button2_Click(object sender, EventArgs e)
-        {
-            incfreq(c_freq.Text, 0, -1); 
-        }
-
-        private void button3_Click(object sender, EventArgs e)
-        {
-            incfreq(c_freq.Text, 1, -100); 
-        }
-
-        private void button5_Click(object sender, EventArgs e)
-        {
-            incfreq(c_freq.Text, 2, -100); 
-        }
-
-        private void requests_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-        private void updateDebug()
-        {
-            while (1==1)
-            {
-                if (isConnected == false)
-                {
-
-                    MessageBox.Show("No Serial Port Connected", "Serial Error");
-                }
-                if (isConnected == true)
-                {
-                    if (sp.ReadLine() != null)
-                    {
-                        this.Invoke((MethodInvoker)delegate
-                        {
-                            textBox1.AppendText(sp.ReadLine() + "\n");
-                        });
-                    }
-                    else { }
-                }
-                Thread.Sleep(100);
-            }
-        }
 
         private void button8_Click(object sender, EventArgs e)
         {
@@ -287,7 +162,6 @@ namespace HF80
                     if (sp.IsOpen)
                     {
                         sp.Write(freq_req, 0, 2);
-                        textBox1.Text = sp.ReadLine();
                     }
 
                 }
@@ -296,7 +170,6 @@ namespace HF80
                     if (sp.IsOpen)
                     {
                         sp.Write(mode_req, 0, 2);
-                        textBox1.Text = sp.ReadLine();
                     }
                 }
                 else if (s == "Get Faults")
@@ -323,6 +196,19 @@ namespace HF80
         private void txButton_Click(object sender, EventArgs e)
         {
 
+        }
+
+
+        /* Print to the output window */
+        public void Print(String s)
+        {
+            printBox.AppendText(s + "\n");
+        }
+
+        private void setFreqButton_Click(object sender, EventArgs e)
+        {
+            byte[] response = radio.GetStatus(2);
+            int i = 4;
         }
         
     }
