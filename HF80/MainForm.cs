@@ -94,6 +94,7 @@ namespace HF80
         /* Called when the form first loads */
         private void Form1_Load(object sender, EventArgs e)
         {
+            byte[] d = Message.GetFrequencyMessage(14200000);
             connIndicator.BackColor = Color.White;
             String[] ports = SerialPort.GetPortNames();
             connIndicator.BackColor = Color.Red;
@@ -106,7 +107,7 @@ namespace HF80
                 closer.Close();
             }
 
-            controlGroup.Enabled = false;
+            //controlGroup.Enabled = false;
         }
 
         private void hF80HelpToolStripMenuItem_Click(object sender, EventArgs e)
@@ -119,8 +120,7 @@ namespace HF80
         {
             if (radio != null && amModeButton.Checked)
             {
-                radio.SetMode(Radio.MODE_AM);
-                currentMode = Radio.MODE_AM;
+                SetMode(Radio.MODE_AM);
             }
         }
 
@@ -128,8 +128,7 @@ namespace HF80
         {
             if (radio != null && usbModeButton.Checked)
             {
-                radio.SetMode(Radio.MODE_USB);
-                currentMode = Radio.MODE_USB;
+                SetMode(Radio.MODE_USB);
             }
         }
 
@@ -137,8 +136,7 @@ namespace HF80
         {
             if (radio != null && lsbModeButton.Checked)
             {
-                radio.SetMode(Radio.MODE_LSB);
-                currentMode = Radio.MODE_LSB;
+                SetMode(Radio.MODE_LSB);
             }
         }
 
@@ -146,11 +144,30 @@ namespace HF80
         {
             if (radio != null && isbModeButton.Checked)
             {
-                radio.SetMode(Radio.MODE_ISB);
-                currentMode = Radio.MODE_ISB;
+                SetMode(Radio.MODE_ISB);
             }
         }
         #endregion
+
+
+        /* Set the mode of the radio object */
+        public void SetMode(int mode)
+        {
+            if (radio != null)
+            {
+                bool success = radio.SetMode(mode);
+
+                if (success)
+                {
+                    Print("Changed mode to " + mode);
+                    this.currentMode = mode;
+                }
+                else
+                {
+                    Print("Failed to change mode to " + mode);
+                }
+            }
+        }
 
         private void button8_Click(object sender, EventArgs e)
         {
@@ -207,8 +224,8 @@ namespace HF80
 
         private void setFreqButton_Click(object sender, EventArgs e)
         {
-            byte[] response = radio.GetStatus(2);
-            int i = 4;
+            float frequency = frequencyEdit.Frequency;
+            Print("Frequency changed to " + frequency);
         }
         
     }

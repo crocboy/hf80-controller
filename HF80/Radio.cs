@@ -52,20 +52,30 @@ namespace HF80
 
                 port.Open();
 
-                port.DataReceived += OnDataReceived;
-
                 return true;
             }
             catch (Exception e)
             {
-                // Print exception 
+                Print(e.ToString()); 
                 port = null;
                 return false;
             }
         }
 
+        /* Set the frequency */
+        public bool SetFrequency(int frequency)
+        {
+            byte[] data = Message.GetFrequencyMessage(frequency);
+
+            Write(data);
+
+            byte[] response = GetStatus(1);
+
+            return true;
+        }
+
         /* Change the mode of the radio */
-        public void SetMode(int mode)
+        public bool SetMode(int mode)
         {
             /* Find what mode the user wishes to switch to, and send the proper message over the serial port */
             byte[] currentStatus = GetStatus(2);
@@ -86,11 +96,13 @@ namespace HF80
                     break;
             }
 
-            /* Confirm that mode is changed */
-            int newMode = Message.GetMode(GetStatus(2));
+            /* Read the radio's response */
+            byte[] response = ReadResponse();
 
-            if (newMode == mode)
-                Print("Mode changed to " + mode);
+            if (response[3] == currentStatus[3] && response[4] == currentStatus[4])
+                return true;
+            else
+                return false;
         }
 
 
@@ -113,14 +125,13 @@ namespace HF80
         {
             if(port != null)
             {
-                byte[] temp = Message.WORD_TWO_STATUS;
-                port.Write(temp, 0, temp.Length);
+                port.Write(data, 0, data.Length);
             }
         }
 
 
         /* Get the response for the specified word */
-        public byte[] GetStatus(int word)
+        private byte[] GetStatus(int word)
         {
             if (word > 4 || word < 1)
                 return null;
@@ -147,11 +158,6 @@ namespace HF80
             {
                 return null;
             }
-        }
-
-        /* Called every time new data is received */
-        public void OnDataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
         }
     }
 }

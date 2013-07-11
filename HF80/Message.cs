@@ -1,5 +1,6 @@
  using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
@@ -35,8 +36,9 @@ namespace HF80
         public static byte[] MODE_ENABLE_USB = { 0x01, 0x20 };
         public static byte[] MODE_ENABLE_LSB = { 0x02, 0x20 };
 
-        public const byte ENABLE_STATUS_RETURN = 0x80;
+        public const byte ENABLE_STATUS_RETURN = 0x3F;
 
+        #region Mode Methods
         /* Return a message that sets the mode of the radio to the given mode.  Pass in a status message representing the current status. */
         public static byte[] GetModeMessage(int mode, byte[] current)
         {
@@ -69,34 +71,52 @@ namespace HF80
                     break;
             }
 
-            current[1] = 0x80; // (byte)(current[1] & ENABLE_STATUS_RETURN);  // Enable status return
+            current[1] = (byte)(current[1] & ENABLE_STATUS_RETURN);  // Enable status return
             return current;
         }
 
-        /* Return the mode that the status message indicates */
-        public static int GetMode(byte[] message)
+        #endregion
+
+        #region Frequency Methods
+
+        /* Return the frequency message for the given frequency (in hertz) */
+        public static byte[] GetFrequencyMessage(int freq)
         {
-            if (message.Length != 5)
-                return -1;
+            if (freq > 29999999 || freq <= 0)
+                return null;
 
-            BitArray four = new BitArray(new byte[] { message[3] });
-            BitArray five = new BitArray(new byte[] { message[4] });
+            byte[] data = new byte[5];
+            data[0] = WORD_ONE_START;
 
-            bool[] data = new bool[8];
-            five.CopyTo(data, 0);
+            int[] test = GetDigitArray(freq);
 
-            if (five[6])
-                return Radio.MODE_AM;
-            else if (five[5] && five[3])
-                return Radio.MODE_ISB;
-            else if (five[5] && five[4])
-                return Radio.MODE_CW;
-            else if (five[5] && four[0])
-                return Radio.MODE_USB;
-            else if (five[5] && four[1])
-                return Radio.MODE_USB;
 
-            return -1;
+            data[1] = (byte)(data[1] & ENABLE_STATUS_RETURN); // Enable status return
+            return data;
         }
+
+        /* Return the 4-bit version of the given digit (0-9) */
+        /* Used as a bitmask when creating the frequency message */
+        public byte GetMask(byte digit)
+        {
+            return 0;
+        }
+
+        /* Convert an integer to an array of its digits */
+        public static int[] GetDigitArray(int n)
+        {
+            if (n == 0) return new int[1] { 0 };
+
+            var digits = new List<int>();
+
+            for (; n != 0; n /= 10)
+                digits.Add(n % 10);
+
+            var arr = digits.ToArray();
+            Array.Reverse(arr);
+            return arr;
+        }
+
+        #endregion
     }
 }
