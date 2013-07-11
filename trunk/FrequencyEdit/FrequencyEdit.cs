@@ -19,7 +19,7 @@ namespace SDRSharp.FrequencyEdit
 
     public sealed class FrequencyEdit : UserControl
     {
-        private const int DigitCount = 10;
+        private const int DigitCount = 8;
         private const int DigitImageSplitCount = 12;
         private const int DigitSeperatorCount = DigitCount - 1 / 3;
         

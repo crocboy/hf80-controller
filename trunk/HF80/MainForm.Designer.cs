@@ -52,7 +52,9 @@
             this.controlGroup = new System.Windows.Forms.GroupBox();
             this.printBox = new System.Windows.Forms.TextBox();
             this.setFreqButton = new System.Windows.Forms.Button();
-            this.frequencyEdit1 = new SDRSharp.FrequencyEdit.FrequencyEdit();
+            this.label4 = new System.Windows.Forms.Label();
+            this.frequencyEdit = new SDRSharp.FrequencyEdit.FrequencyEdit();
+            this.label5 = new System.Windows.Forms.Label();
             this.menuStrip1.SuspendLayout();
             this.connectionGroup.SuspendLayout();
             this.controlGroup.SuspendLayout();
@@ -289,11 +291,13 @@
             this.controlGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.controlGroup.Controls.Add(this.label5);
+            this.controlGroup.Controls.Add(this.label4);
             this.controlGroup.Controls.Add(this.printBox);
             this.controlGroup.Controls.Add(this.label6);
             this.controlGroup.Controls.Add(this.setFreqButton);
             this.controlGroup.Controls.Add(this.amModeButton);
-            this.controlGroup.Controls.Add(this.frequencyEdit1);
+            this.controlGroup.Controls.Add(this.frequencyEdit);
             this.controlGroup.Controls.Add(this.isbModeButton);
             this.controlGroup.Controls.Add(this.lsbModeButton);
             this.controlGroup.Controls.Add(this.button8);
@@ -314,13 +318,14 @@
             this.printBox.Location = new System.Drawing.Point(532, 265);
             this.printBox.Multiline = true;
             this.printBox.Name = "printBox";
+            this.printBox.ReadOnly = true;
             this.printBox.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.printBox.Size = new System.Drawing.Size(226, 238);
             this.printBox.TabIndex = 19;
             // 
             // setFreqButton
             // 
-            this.setFreqButton.Location = new System.Drawing.Point(243, 206);
+            this.setFreqButton.Location = new System.Drawing.Point(234, 206);
             this.setFreqButton.Name = "setFreqButton";
             this.setFreqButton.Size = new System.Drawing.Size(106, 23);
             this.setFreqButton.TabIndex = 18;
@@ -328,17 +333,36 @@
             this.setFreqButton.UseVisualStyleBackColor = true;
             this.setFreqButton.Click += new System.EventHandler(this.setFreqButton_Click);
             // 
-            // frequencyEdit1
+            // label4
             // 
-            this.frequencyEdit1.AutoSize = true;
-            this.frequencyEdit1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.frequencyEdit1.BackColor = System.Drawing.Color.Transparent;
-            this.frequencyEdit1.Frequency = ((long)(0));
-            this.frequencyEdit1.Location = new System.Drawing.Point(177, 235);
-            this.frequencyEdit1.Name = "frequencyEdit1";
-            this.frequencyEdit1.Size = new System.Drawing.Size(234, 25);
-            this.frequencyEdit1.StepSize = 0;
-            this.frequencyEdit1.TabIndex = 17;
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(605, 249);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(77, 13);
+            this.label4.TabIndex = 20;
+            this.label4.Text = "Debug Monitor";
+            // 
+            // frequencyEdit
+            // 
+            this.frequencyEdit.AutoSize = true;
+            this.frequencyEdit.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.frequencyEdit.BackColor = System.Drawing.Color.Transparent;
+            this.frequencyEdit.Frequency = ((long)(0));
+            this.frequencyEdit.Location = new System.Drawing.Point(177, 235);
+            this.frequencyEdit.Name = "frequencyEdit";
+            this.frequencyEdit.Size = new System.Drawing.Size(183, 25);
+            this.frequencyEdit.StepSize = 0;
+            this.frequencyEdit.TabIndex = 17;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label5.Location = new System.Drawing.Point(366, 240);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(42, 20);
+            this.label5.TabIndex = 21;
+            this.label5.Text = "MHz";
             // 
             // MainForm
             // 
@@ -392,9 +416,11 @@
         private System.Windows.Forms.ListBox requests;
         private System.Windows.Forms.Button button8;
         private System.Windows.Forms.GroupBox controlGroup;
-        private SDRSharp.FrequencyEdit.FrequencyEdit frequencyEdit1;
+        private SDRSharp.FrequencyEdit.FrequencyEdit frequencyEdit;
         private System.Windows.Forms.Button setFreqButton;
         private System.Windows.Forms.TextBox printBox;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label5;
     }
 }
 
