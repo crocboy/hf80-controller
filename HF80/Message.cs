@@ -29,6 +29,9 @@ namespace HF80
         public const byte ZERO_MODE_CHAR_5 = 0x07;
         public const byte ZERO_MODE_CHAR_4 = 0xFC;
 
+        public const byte ENABLE_TX = 0x10;
+        public const byte DISABLE_TX = 0xEF;
+
         /* Bitmasks used for enabling certain modes */
         public const byte MODE_ENABLE_AM = 0x40;
         public const byte MODE_ENABLE_ISB = 0x28;
@@ -88,9 +91,25 @@ namespace HF80
             byte[] data = new byte[5];
             data[0] = WORD_ONE_START;
 
-            int[] test = GetDigitArray(freq);
+            byte[] digits = GetDigitArray(freq);
 
+            /* Apply the first digit as a direct assignment */
+            /* Mask the rest of the digits after they are shifted to the left 4 bits - this forms the BCD */
+            data[4] = digits[0];
+            data[4] = (byte)(data[4] | (digits[1] << 4));
 
+            data[3] = digits[2];
+            data[3] = (byte)(data[3] | (digits[3] << 4));
+
+            data[2] = digits[4];
+            data[2] = (byte)(data[2] | (digits[5] << 4));
+
+            data[1] = digits[6];
+
+            /* If there is a digit 8, mask it */
+            if(digits.Length == 8)
+                data[1] = (byte)(data[1] | (digits[7] << 4));
+            
             data[1] = (byte)(data[1] & ENABLE_STATUS_RETURN); // Enable status return
             return data;
         }
@@ -102,19 +121,17 @@ namespace HF80
             return 0;
         }
 
-        /* Convert an integer to an array of its digits */
-        public static int[] GetDigitArray(int n)
+        /* Convert an integer to an array of its digits.  Lowest digit first. */
+        public static byte[] GetDigitArray(int n)
         {
-            if (n == 0) return new int[1] { 0 };
+            if (n == 0) return new byte[1] { 0 };
 
-            var digits = new List<int>();
+            var digits = new List<byte>();
 
             for (; n != 0; n /= 10)
-                digits.Add(n % 10);
+                digits.Add((byte)(n % 10));
 
-            var arr = digits.ToArray();
-            Array.Reverse(arr);
-            return arr;
+            return digits.ToArray();
         }
 
         #endregion
