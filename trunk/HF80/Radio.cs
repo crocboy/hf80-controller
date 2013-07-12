@@ -71,6 +71,14 @@ namespace HF80
 
             byte[] response = GetStatus(1);
 
+            /* Re-enable status return and then compare the two, byte by byte */
+            /* If two bytes are unequal, it will return false */
+            response[1] = (byte)(response[1] & Message.ENABLE_STATUS_RETURN);
+
+            for (int i = 1; i < response.Length; i++)
+                if (data[i] != response[i])
+                    return false;
+
             return true;
         }
 
@@ -140,6 +148,21 @@ namespace HF80
             Write(sendData);
 
             return ReadResponse();
+        }
+
+
+        /* Set the status of the transmitting key */
+        public bool SetTX(bool tx)
+        {
+            byte[] status = GetStatus(4);
+            status[1] = (byte)(status[1] & Message.DISABLE_TX);  // Erase current TX settings
+
+            if(tx)
+                status[1] = (byte)(status[1] | Message.ENABLE_TX);
+
+            Write(status);
+
+            return true;
         }
 
         /* Read a 5-byte response from the port */
