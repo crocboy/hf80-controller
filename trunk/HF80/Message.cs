@@ -11,7 +11,9 @@ namespace HF80
     class Message
     {
         public const int HF80Address = 3; // The address of the HF80
-        
+
+        #region Bitmasks 
+
         /* Defines the first character in each word */
         public const byte WORD_ONE_START   = 0xC0 | HF80Address;
         public const byte WORD_TWO_START   = 0xD0 | HF80Address;
@@ -32,6 +34,12 @@ namespace HF80
         public const byte ENABLE_TX = 0x10;
         public const byte DISABLE_TX = 0xEF;
 
+        /* Bitmasks for both LSB and USB AGC */
+        public const byte ENABLE_USB_AGC = 0x00;
+        public const byte ENABLE_LSB_AGC = 0x00;
+        public const byte DISABLE_USB_AGC = 0x00;
+        public const byte DISABLE_LSB_AGC = 0x00;
+
         /* Bitmasks used for enabling certain modes */
         public const byte MODE_ENABLE_AM = 0x40;
         public const byte MODE_ENABLE_ISB = 0x28;
@@ -41,10 +49,15 @@ namespace HF80
 
         public const byte ENABLE_STATUS_RETURN = 0x3F;
 
+        #endregion
+
         #region Mode Methods
         /* Return a message that sets the mode of the radio to the given mode.  Pass in a status message representing the current status. */
         public static byte[] GetModeMessage(int mode, byte[] current)
         {
+            if (current == null)
+                throw new ArgumentNullException("Message.GetModeMessage: \"current\" is null!");
+
             if (current.Length != 5)
                 return null;
 
@@ -70,7 +83,7 @@ namespace HF80
                     current[4] = (byte)(current[4] | MODE_ENABLE_LSB[1]);
                     break;
                 case Radio.MODE_CW:
-                    current[4] = (byte)(current[4] & MODE_ENABLE_CW);
+                    current[4] = (byte)(current[4] | MODE_ENABLE_CW);
                     break;
             }
 
@@ -85,9 +98,6 @@ namespace HF80
         /* Return the frequency message for the given frequency (in hertz) */
         public static byte[] GetFrequencyMessage(int freq)
         {
-            if (freq > 29999999 || freq <= 0)
-                return null;
-
             byte[] data = new byte[5];
             data[0] = WORD_ONE_START;
 
