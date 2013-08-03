@@ -44,6 +44,9 @@
             this.lsbModeButton = new System.Windows.Forms.RadioButton();
             this.usbModeButton = new System.Windows.Forms.RadioButton();
             this.controlGroup = new System.Windows.Forms.GroupBox();
+            this.cwModeButton = new System.Windows.Forms.RadioButton();
+            this.usbAgcBox = new System.Windows.Forms.CheckBox();
+            this.lsbAgcBox = new System.Windows.Forms.CheckBox();
             this.txLabel = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
@@ -51,6 +54,9 @@
             this.printBox = new System.Windows.Forms.TextBox();
             this.setFreqButton = new System.Windows.Forms.Button();
             this.frequencyEdit = new SDRSharp.FrequencyEdit.FrequencyEdit();
+            this.statusGroup = new System.Windows.Forms.GroupBox();
+            this.restartToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.clearLogButton = new System.Windows.Forms.Button();
             this.menuStrip1.SuspendLayout();
             this.connectionGroup.SuspendLayout();
             this.controlGroup.SuspendLayout();
@@ -71,7 +77,8 @@
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.closeToolStripMenuItem});
+            this.closeToolStripMenuItem,
+            this.restartToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
             this.fileToolStripMenuItem.Text = "File";
@@ -80,8 +87,9 @@
             // 
             this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
             this.closeToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Q)));
-            this.closeToolStripMenuItem.Size = new System.Drawing.Size(149, 22);
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.closeToolStripMenuItem.Text = "Close ";
+            this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -168,7 +176,7 @@
             // amModeButton
             // 
             this.amModeButton.AutoSize = true;
-            this.amModeButton.Location = new System.Drawing.Point(195, 59);
+            this.amModeButton.Location = new System.Drawing.Point(167, 55);
             this.amModeButton.Margin = new System.Windows.Forms.Padding(2);
             this.amModeButton.Name = "amModeButton";
             this.amModeButton.Size = new System.Drawing.Size(41, 17);
@@ -181,7 +189,7 @@
             // isbModeButton
             // 
             this.isbModeButton.AutoSize = true;
-            this.isbModeButton.Location = new System.Drawing.Point(291, 59);
+            this.isbModeButton.Location = new System.Drawing.Point(263, 55);
             this.isbModeButton.Margin = new System.Windows.Forms.Padding(2);
             this.isbModeButton.Name = "isbModeButton";
             this.isbModeButton.Size = new System.Drawing.Size(42, 17);
@@ -194,7 +202,7 @@
             // lsbModeButton
             // 
             this.lsbModeButton.AutoSize = true;
-            this.lsbModeButton.Location = new System.Drawing.Point(337, 59);
+            this.lsbModeButton.Location = new System.Drawing.Point(309, 55);
             this.lsbModeButton.Margin = new System.Windows.Forms.Padding(2);
             this.lsbModeButton.Name = "lsbModeButton";
             this.lsbModeButton.Size = new System.Drawing.Size(45, 17);
@@ -207,7 +215,7 @@
             // usbModeButton
             // 
             this.usbModeButton.AutoSize = true;
-            this.usbModeButton.Location = new System.Drawing.Point(240, 59);
+            this.usbModeButton.Location = new System.Drawing.Point(212, 55);
             this.usbModeButton.Margin = new System.Windows.Forms.Padding(2);
             this.usbModeButton.Name = "usbModeButton";
             this.usbModeButton.Size = new System.Drawing.Size(47, 17);
@@ -219,9 +227,12 @@
             // 
             // controlGroup
             // 
-            this.controlGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
+            this.controlGroup.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.controlGroup.Controls.Add(this.clearLogButton);
+            this.controlGroup.Controls.Add(this.cwModeButton);
+            this.controlGroup.Controls.Add(this.usbAgcBox);
+            this.controlGroup.Controls.Add(this.lsbAgcBox);
             this.controlGroup.Controls.Add(this.txLabel);
             this.controlGroup.Controls.Add(this.label1);
             this.controlGroup.Controls.Add(this.label5);
@@ -234,12 +245,46 @@
             this.controlGroup.Controls.Add(this.isbModeButton);
             this.controlGroup.Controls.Add(this.lsbModeButton);
             this.controlGroup.Controls.Add(this.usbModeButton);
-            this.controlGroup.Location = new System.Drawing.Point(156, 27);
+            this.controlGroup.Location = new System.Drawing.Point(156, 25);
             this.controlGroup.Name = "controlGroup";
-            this.controlGroup.Size = new System.Drawing.Size(764, 509);
+            this.controlGroup.Size = new System.Drawing.Size(764, 301);
             this.controlGroup.TabIndex = 17;
             this.controlGroup.TabStop = false;
             this.controlGroup.Text = "Control";
+            // 
+            // cwModeButton
+            // 
+            this.cwModeButton.AutoSize = true;
+            this.cwModeButton.Location = new System.Drawing.Point(359, 55);
+            this.cwModeButton.Name = "cwModeButton";
+            this.cwModeButton.Size = new System.Drawing.Size(43, 17);
+            this.cwModeButton.TabIndex = 26;
+            this.cwModeButton.TabStop = true;
+            this.cwModeButton.Text = "CW";
+            this.cwModeButton.UseVisualStyleBackColor = true;
+            this.cwModeButton.CheckedChanged += new System.EventHandler(this.cwModeButton_CheckedChanged);
+            // 
+            // usbAgcBox
+            // 
+            this.usbAgcBox.AutoSize = true;
+            this.usbAgcBox.Location = new System.Drawing.Point(44, 153);
+            this.usbAgcBox.Name = "usbAgcBox";
+            this.usbAgcBox.Size = new System.Drawing.Size(73, 17);
+            this.usbAgcBox.TabIndex = 25;
+            this.usbAgcBox.Text = "USB AGC";
+            this.usbAgcBox.UseVisualStyleBackColor = true;
+            this.usbAgcBox.CheckedChanged += new System.EventHandler(this.usbAgcBox_CheckedChanged);
+            // 
+            // lsbAgcBox
+            // 
+            this.lsbAgcBox.AutoSize = true;
+            this.lsbAgcBox.Location = new System.Drawing.Point(44, 124);
+            this.lsbAgcBox.Name = "lsbAgcBox";
+            this.lsbAgcBox.Size = new System.Drawing.Size(71, 17);
+            this.lsbAgcBox.TabIndex = 24;
+            this.lsbAgcBox.Text = "LSB AGC";
+            this.lsbAgcBox.UseVisualStyleBackColor = true;
+            this.lsbAgcBox.CheckedChanged += new System.EventHandler(this.lsbAgcBox_CheckedChanged);
             // 
             // txLabel
             // 
@@ -274,7 +319,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(605, 249);
+            this.label4.Location = new System.Drawing.Point(562, 33);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(77, 13);
             this.label4.TabIndex = 20;
@@ -282,7 +327,7 @@
             // 
             // printBox
             // 
-            this.printBox.Location = new System.Drawing.Point(532, 265);
+            this.printBox.Location = new System.Drawing.Point(532, 55);
             this.printBox.Multiline = true;
             this.printBox.Name = "printBox";
             this.printBox.ReadOnly = true;
@@ -312,11 +357,41 @@
             this.frequencyEdit.StepSize = 0;
             this.frequencyEdit.TabIndex = 17;
             // 
+            // statusGroup
+            // 
+            this.statusGroup.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.statusGroup.Location = new System.Drawing.Point(156, 332);
+            this.statusGroup.Name = "statusGroup";
+            this.statusGroup.Size = new System.Drawing.Size(764, 196);
+            this.statusGroup.TabIndex = 18;
+            this.statusGroup.TabStop = false;
+            this.statusGroup.Text = "Status";
+            // 
+            // restartToolStripMenuItem
+            // 
+            this.restartToolStripMenuItem.Name = "restartToolStripMenuItem";
+            this.restartToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.restartToolStripMenuItem.Text = "Restart";
+            this.restartToolStripMenuItem.Click += new System.EventHandler(this.restartToolStripMenuItem_Click);
+            // 
+            // clearLogButton
+            // 
+            this.clearLogButton.Location = new System.Drawing.Point(645, 28);
+            this.clearLogButton.Name = "clearLogButton";
+            this.clearLogButton.Size = new System.Drawing.Size(75, 23);
+            this.clearLogButton.TabIndex = 27;
+            this.clearLogButton.Text = "Clear";
+            this.clearLogButton.UseVisualStyleBackColor = true;
+            this.clearLogButton.Click += new System.EventHandler(this.clearLogButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(932, 548);
+            this.ClientSize = new System.Drawing.Size(932, 540);
+            this.Controls.Add(this.statusGroup);
             this.Controls.Add(this.controlGroup);
             this.Controls.Add(this.connectionGroup);
             this.Controls.Add(this.menuStrip1);
@@ -365,6 +440,12 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label txLabel;
+        private System.Windows.Forms.CheckBox usbAgcBox;
+        private System.Windows.Forms.CheckBox lsbAgcBox;
+        private System.Windows.Forms.RadioButton cwModeButton;
+        private System.Windows.Forms.GroupBox statusGroup;
+        private System.Windows.Forms.ToolStripMenuItem restartToolStripMenuItem;
+        private System.Windows.Forms.Button clearLogButton;
     }
 }
 

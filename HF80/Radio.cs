@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,10 @@ namespace HF80
     /* Most messages are provided via the "Message" class */
     class Radio
     {
+        /* Static constants for radio configuration */
+        public const int MAX_FREQUENCY = 29999999;
+        public const int MIN_FREQUENCY =  1000000;
+
         /* Static constants used for changing various settings */
         public const int MODE_AM  = 0;
         public const int MODE_LSB = 1;
@@ -18,23 +23,33 @@ namespace HF80
         public const int MODE_USB = 3;
         public const int MODE_CW  = 4;
 
+        /* Public variables */
+        public bool IsLocal = false;
+
         /* Event handling variables */
         public delegate void OnPrint(String message);
         public event OnPrint onPrint;
+        public delegate void OnLocalChanged(bool local);
+        public event OnLocalChanged onLocalChanged;
 
         /* Instance variables */
         private SerialPort port;
         private String PortName;
 
-        /* Constructor: Provide port name */
+        /// <summary>
+        /// Public constructor for the Radio class
+        /// </summary>
+        /// <param name="portName">The serial port name of the radio (ie, "COM7")</param>
         public Radio(String portName)
         {
             this.PortName = portName;
         }
 
 
-        /* Attempt to connect to the SerialPort given by the portName passed into the constructor */
-        /* Return the status of the operation */
+        /// <summary>
+        /// Attempt to connect to the radio.
+        /// </summary>
+        /// <returns>Outcome of the operation</returns>
         public bool Connect()
         {
             /* Configure SerialPort */
@@ -51,6 +66,13 @@ namespace HF80
                 };
 
                 port.Open();
+                Flush();
+
+                port.DiscardInBuffer();
+                port.DiscardOutBuffer();
+
+                if (CheckForLocal())
+                    return false;
 
                 return true;
             }
@@ -62,14 +84,24 @@ namespace HF80
             }
         }
 
-        /* Set the frequency */
+        /// <summary>
+        /// Set the frequency of the radio.
+        /// </summary>
+        /// <param name="frequency">Desired frequency in hertz.</param>
+        /// <returns>Outcome of the operation.</returns>
         public bool SetFrequency(int frequency)
         {
+            if (CheckForLocal())
+                return false;
+
+            if (frequency < MIN_FREQUENCY || frequency > MAX_FREQUENCY)
+                return false;
+
             byte[] data = Message.GetFrequencyMessage(frequency);
 
             Write(data);
 
-            byte[] response = GetStatus(1);
+            byte[] response = ReadResponse();
 
             /* Re-enable status return and then compare the two, byte by byte */
             /* If two bytes are unequal, it will return false */
@@ -82,65 +114,91 @@ namespace HF80
             return true;
         }
 
-        /* Change the mode of the radio */
+        /// <summary>
+        /// Set the operating mode of the radio.
+        /// </summary>
+        /// <param name="mode">The desired mode (A constant defined in the Radio class)</param>
+        /// <returns>Outcome of the operation</returns>
         public bool SetMode(int mode)
         {
-            /* Find what mode the user wishes to switch to, and send the proper message over the serial port */
-            byte[] currentStatus = GetStatus(2);
-
-            switch (mode)
+            try
             {
-                case MODE_AM:
-                    Write(Message.GetModeMessage(MODE_AM, currentStatus));
-                    break;
-                case MODE_LSB:
-                    Write(Message.GetModeMessage(MODE_LSB, currentStatus));
-                    break;
-                case MODE_ISB:
-                    Write(Message.GetModeMessage(MODE_ISB, currentStatus));
-                    break;
-                case MODE_USB:
-                    Write(Message.GetModeMessage(MODE_USB, currentStatus));
-                    break;
+                Flush();
+
+                //if (CheckForLocal())
+                // return false;
+
+                /* Find what mode the user wishes to switch to, and send the proper message over the serial port */
+                byte[] currentStatus = GetStatus(2);
+
+                switch (mode)
+                {
+                    case MODE_CW:
+                        Write(Message.GetModeMessage(MODE_CW, currentStatus));
+                        break;
+                    case MODE_AM:
+                        Write(Message.GetModeMessage(MODE_AM, currentStatus));
+                        break;
+                    case MODE_LSB:
+                        Write(Message.GetModeMessage(MODE_LSB, currentStatus));
+                        break;
+                    case MODE_ISB:
+                        Write(Message.GetModeMessage(MODE_ISB, currentStatus));
+                        break;
+                    case MODE_USB:
+                        Write(Message.GetModeMessage(MODE_USB, currentStatus));
+                        break;
+                }
+
+                /* Read the radio's response */
+                byte[] response = ReadResponse();
+
+                if (response[3] == currentStatus[3] && response[4] == currentStatus[4])
+                    return true;
+                else
+                    return false;
             }
-
-            /* Read the radio's response */
-            byte[] response = ReadResponse();
-
-            if (response[3] == currentStatus[3] && response[4] == currentStatus[4])
-                return true;
-            else
+            catch (Exception e)
+            {
+                Print(e.ToString());
                 return false;
+            }
         }
 
 
         /* Attempt to print via the OnPrint event */
-        public void Print(String message)
+        private void Print(String message)
         {
             if (onPrint != null)
                 onPrint(message);
         }
 
-        /* Close the SerialPort */
-        public void Close()
+        /// <summary>
+        /// Disconnect the Radio object and clean up resources.
+        /// </summary>
+        public void Disconnect()
         {
             if (port != null)
                 port.Close();
         }
 
-        /* Write the byte[] to the port, at an automatic offset of 0.  This is basically a shortcut method */
+        /// <summary>
+        /// Write data to the SerialPort
+        /// </summary>
+        /// <param name="data">byte[] to be written</param>
         private void Write(byte[] data)
         {
             if(port != null)
-            {
                 port.Write(data, 0, data.Length);
-            }
         }
 
 
         /* Get the response for the specified word */
         private byte[] GetStatus(int word)
         {
+            if (CheckForLocal())
+                throw new LocalModeException();
+
             if (word > 4 || word < 1)
                 return null;
 
@@ -150,10 +208,74 @@ namespace HF80
             return ReadResponse();
         }
 
+        /// <summary>
+        /// Get a bit-level representation of Word 5
+        /// </summary>
+        /// <returns>An array of five bit arrays, each representing a character.</returns>
+        private BitArray[] GetMasterStatus()
+        {
+            try
+            {
+                Flush();
+                
+                byte[] sendData = Message.STATUS_MESSAGES[3];
+                port.Write(sendData, 0, sendData.Length);
 
-        /* Set the status of the transmitting key */
+                byte[] data = new byte[5];
+
+                for (int i = 0; i < 5; i++)
+                    data[i] = (byte)port.ReadByte();
+
+                BitArray one = new BitArray(new byte[] { data[0] });
+                BitArray two = new BitArray(new byte[] { data[1] });
+                BitArray three = new BitArray(new byte[] { data[2] });
+                BitArray four = new BitArray(new byte[] { data[3] });
+                BitArray five = new BitArray(new byte[] { data[4] });
+
+                return new BitArray[] { one, two, three, four, five };
+            }
+            catch (Exception e)
+            {
+                Print("Could not get Master status: " + e);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Refresh the value of 'IsLocal' and raise the OnLocalChanged event if necessary.
+        /// </summary>
+        /// <returns>True if the radio is in local mode, false otherwise.</returns>
+        public bool CheckForLocal()
+        {
+            Flush();
+
+            BitArray[] chars = GetMasterStatus();
+            bool localNow = chars[4][1];
+
+            if (IsLocal != localNow) // 2nd bit of 5th character
+            {
+                if (onLocalChanged != null)
+                    onLocalChanged(localNow);
+
+                IsLocal = localNow;
+            }
+
+            return IsLocal;
+        }
+
+
+        /// <summary>
+        /// Set the status of the transmitting key.
+        /// </summary>
+        /// <param name="tx">The desired state of the TX key</param>
+        /// <returns>The outcome of the operation</returns>
         public bool SetTX(bool tx)
         {
+            Flush();
+
+            if (CheckForLocal())
+                return false;
+
             byte[] status = GetStatus(4);
             status[1] = (byte)(status[1] & Message.DISABLE_TX);  // Erase current TX settings
 
@@ -163,6 +285,50 @@ namespace HF80
             Write(status);
 
             return true;
+        }
+
+        /// <summary>
+        /// Force the state of the TX key (no validation is performed).  Used when we need to force the radio key up.
+        /// </summary>
+        /// <param name="tx">The state of the TX key</param>
+        public void ForceTX(bool tx)
+        {
+            Flush();
+            byte[] status = { Message.WORD_FOUR_START , 0 };
+            status[1] = (byte)(status[1] & Message.DISABLE_TX);  // Erase current TX settings
+
+            if (tx)
+                status[1] = (byte)(status[1] | Message.ENABLE_TX);
+
+            Write(status);
+        }
+
+
+        /// <summary>
+        /// Set the state of the LSB AGC
+        /// </summary>
+        /// <param name="state">The desired state.</param>
+        /// <returns>Outcome of the operation</returns>
+        public bool SetLsbAgc(bool state)
+        {
+            if (CheckForLocal())
+                return false;
+
+            return false;
+        }
+
+
+        /// <summary>
+        /// Set the state of the USB AGC
+        /// </summary>
+        /// <param name="state">The desired state.</param>
+        /// <returns>Outcome of the operation</returns>
+        public bool SetUsbAgc(bool state)
+        {
+            if (CheckForLocal())
+                return false;
+
+            return false;
         }
 
         /* Read a 5-byte response from the port */
@@ -179,8 +345,43 @@ namespace HF80
             }
             catch (Exception e)
             {
+                Print(e.ToString());
                 return null;
             }
         }
+
+        /// <summary>
+        /// Flush the input buffer
+        /// </summary>
+        private void FlushIn()
+        {
+            if (port != null)
+                port.DiscardInBuffer();
+        }
+
+        /// <summary>
+        /// Flush the output buffer
+        /// </summary>
+        private void FlushOut()
+        {
+            if (port != null)
+                port.DiscardOutBuffer();
+        }
+
+        /// <summary>
+        /// Flush the input and output buffers
+        /// </summary>
+        private void Flush()
+        {
+            FlushIn();
+            FlushOut();
+        }
+    }
+
+    /// <summary>
+    /// Exception thrown if radio is in local mode
+    /// </summary>
+    public class LocalModeException : Exception
+    {
     }
 }
