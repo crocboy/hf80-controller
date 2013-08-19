@@ -53,6 +53,7 @@ namespace HF80
             this.KeyPreview = true;
             this.KeyDown += KeyDownTX;
             this.KeyUp += KeyUpTX;
+            this.FormClosing += MainForm_OnFormClosing;
 
             connIndicator.BackColor = Color.White;
             String[] ports = SerialPort.GetPortNames();
@@ -272,8 +273,11 @@ namespace HF80
         /* File -> Disconnect pressed */
         private void closeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if(radio != null)
+            if (radio != null)
+            {
                 radio.Disconnect();
+                radio = null;
+            }
 
             Application.Exit();
         }
@@ -282,11 +286,25 @@ namespace HF80
         private void restartToolStripMenuItem_Click(object sender, EventArgs e)
         {
             if (radio != null)
+            {
                 radio.Disconnect();
+                radio = null;
+            }
 
             Application.Restart();
         }
 
         #endregion
+
+        /* The form is closing (for any reason) */
+        /* This will usually be called even after "Close" or "Restart" is pressed, but not coe will execute since radio will be null already */
+        private void MainForm_OnFormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (radio != null)
+            {
+                radio.Disconnect();
+                radio = null;
+            }
+        }
     }
 }
