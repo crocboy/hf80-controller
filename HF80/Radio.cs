@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.IO.Ports;
 
@@ -179,7 +178,10 @@ namespace HF80
         public void Disconnect()
         {
             if (port != null)
+            {
+                ForceTX(false); // Force key up for safety reasons
                 port.Close();
+            }
         }
 
         /// <summary>

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
-using System.Linq;
 using System.Text;
 using System.IO.Ports;
 using System.Windows.Forms;
@@ -226,7 +225,7 @@ namespace HF80
         /* Key the transmitter based on the status of the space bar */
         void KeyDownTX(Object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.T && !isKeyed)
+            if (e.KeyCode == Keys.T && !isKeyed && isConnected)
             {
                 Print("TX  key down!");
                 radio.SetTX(true);
@@ -240,7 +239,7 @@ namespace HF80
         /* Key the transmitter based on the status of the space bar */
         void KeyUpTX(Object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.T && isKeyed)
+            if (e.KeyCode == Keys.T && isKeyed && isConnected)
             {
                 Print("TX key up!");
                 radio.SetTX(false);
@@ -282,6 +281,9 @@ namespace HF80
         /* File -> Restart was clicked */
         private void restartToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            if (radio != null)
+                radio.Disconnect();
+
             Application.Restart();
         }
 
